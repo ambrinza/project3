@@ -11,6 +11,7 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
+library(caret)
 ```
 
 # **Introduction**
@@ -37,7 +38,7 @@ so all additional investigations can be contextualized. There will likely be
 some outliers representing articles that went viral, resulting in a graph with a 
 long right tail.
 
-```{r share_distribution}
+```{r share_distribution, message = FALSE, error = FALSE, warning = FALSE}
 g <- ggplot(channel_df, aes(x = shares))
 g + geom_histogram(fill = "mediumseagreen") + ggtitle("Distribution of Shares")
 ```
@@ -83,9 +84,58 @@ went viral - see where they tend to land when it comes to content length.
 g <- ggplot(channel_df, aes(x = n_tokens_content, y = shares))
 g + geom_point() + xlab("Content Length") + ggtitle("Shares vs Content Length")
 ```
-Now that we've investigated how length affects shares, we will dive into
+Now that we've investigated how length affects shares, we will dive into the actual
+content of the article. First, we will look at how videos affect shares. In the summary,
+compare the average number of videos to those of other channels to see which has the
+most videos associated with the content. If the median is 0 but there is an average,
+that means the majority of articles from this channel do not have any videos.
+
+```{r summary_3}
+summary(channel_df$num_videos)
+```
+
+Now we will see how the videos affect shares using a scatter plot. If there is a
+positive upward trend, more videos in an article will result in more shares.
+If there is a negative downward trend, more videos in an article will result in 
+fewer shares.
+
+```{r graph_3}
+g <- ggplot(channel_df, aes(x = num_videos, y = shares))
+g + geom_point() + xlab("Video Count") + ggtitle("Shares vs Video Count")
+```
+
 
 
 # **Modeling**
+In order to do some modeling, first we will need to split the data into a training
+and test set. First, we will remove URLs since they are just essentially IDs for
+the articles.
+```{r split_data}
+# Setting seed for reproducibility
+set.seed(24)
+channel_df <- channel_df %>% select(-url)
+train_index <- createDataPartition(channel_df$shares, p = 0.70, list = FALSE, times = 1)
+train <- channel_df[train_index, ]
+test <- channel_df[-train_index, ]
+```
+
+## Linear Regression Models
+
+## Random Forest Model
+In this section, we will fit a random forest model. Random forest models are an ensemble
+model, using regression trees and a subset of predictors for each tree. They are an
+extension of bagging models, where the algorithm resamples from the data, trains
+a tree on this resample, and then calculates the prediction. This is done B times,
+where B is generally a large number. The final predictions are then an average from
+all of the trees. Random forest models do the same thing, except each tree only
+uses a subset of predictors in order to reduce correlation amongst trees and thus
+reduce variance.
+
+```{r random_forest}
+fit_rf <- train(shares ~., data = train, method = "rf", trControl = 
+                   trainControl(method = "cv", number = 10), preProcess = 
+                   c("center", "scale"))
+```
+
 
 # **Comparison**
