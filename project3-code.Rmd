@@ -10,6 +10,7 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(corrplot)
 ```
 
 # **Introduction**
@@ -27,6 +28,28 @@ channel_df <- df %>%
 
 
 # **Summarizations**
+In this section, we will produce some basic yet meaningful summary statistics and
+plots about the training data we're working with. We will focus most closely on how
+our data relates to the shares variable.
+
+First, we will look into title length. The length of a title can affect whether someone
+is willing to share an article, since if the title gets cut off when sharing, a 
+person might be less likely to share. This could differ by channel. In the summary
+below, pay attention to the average title length and see how it differs from the
+other channels. 
+
+```{r summary_1}
+summary(channel_df$n_tokens_title)
+```
+
+To continue this investigation, we will plot title length against shares. If there
+is a negative downward trend, that means the longer the title length, the less likely
+a person is to share.
+
+```{r graph_1}
+
+```
+
 
 # **Modeling**
 
