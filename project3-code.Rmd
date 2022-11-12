@@ -12,11 +12,15 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(caret)
+library(rmarkdown)
 ```
 
 # **Introduction**
 
+In this project, we will analyze the data set about article shares based on various predictors. This data set includes fifty-eight predictors (both continuous and categorical variables) and one continuous response variable (shares). We will provide summary statistics and graphs for selected predictors in the summarizations part. Those are predictors that we think might have more effect on the number of shares, such as length of article tile, numbers of videos/images, the day that article publisehd, etc. In the following section, we will work on building different models and model selection. The models we would like to fit are linear regression model, random forest model and boosted tree model. Cross-validation will be used for both random forest and boosted tree models. 
+
 # **Data**
+
 The first step we need to take is reading in the data. Then we will need to 
 subset to our channel of interest. In this case, that channel is `params$channel`.
 
@@ -29,6 +33,7 @@ channel_df <- df %>%
 
 
 # **Summarizations**
+
 In this section, we will produce some basic yet meaningful summary statistics and
 plots about the training data we're working with. We will focus most closely on how
 our data relates to the shares variable.
@@ -42,7 +47,6 @@ long right tail.
 g <- ggplot(channel_df, aes(x = shares))
 g + geom_histogram(fill = "mediumseagreen") + ggtitle("Distribution of Shares")
 ```
-
 
 Now that we know the general shape of the distribution of shares, we will look 
 into title length. The length of a title can affect whether someone
@@ -104,7 +108,57 @@ g <- ggplot(channel_df, aes(x = num_videos, y = shares))
 g + geom_point() + xlab("Video Count") + ggtitle("Shares vs Video Count")
 ```
 
+Sometimes, contents with more images are more attractive since visuals give us a better understanding. Now we will investigate how number of imagines affect the shares. First of all, we will take look at some data summaries.
 
+```{r summary_4}
+summary(channel_df$num_imgs)
+```
+
+It looks like most articles do not have many images since the median value is only 1. The mean value is close to 5, there might be a few articles with a large amount of pictures.
+
+Now we would like to plot the number of shares as the image count changes by a scatter plot.
+
+```{r graph_4}
+g<- ggplot(channel_df, aes(x = num_imgs, y = shares))
+  g + geom_point() + xlab("Image Count") + ggtitle("Shares vs Image Count")
+```
+
+As you can tell, the amount of shares are not necessarily relateing to the number of images. There are even some high shares when image count close to 0.
+
+Now I would like to see if rate of positive words can affect number of shares. First of all, let's looked at some summary statistics.
+
+```{r summary_5}
+summary(channel_df$rate_positive_words)
+```
+
+It looks like most articles have rate of positive words more than 50% for this channel. Let's look into this more and make a plot between shares and rate of positive words. In order to see it more clear, I will cut the predictor in 0.1 length bins by 'cut_width' function. Then I will use the newly created variable as X axis and build a boxplot.
+
+```{r graph_5}
+graph_5<- channel_df %>% mutate (bin=cut_width(rate_positive_words,width=0.1, boundary=0)) %>%
+ggplot(aes(x = bin, y = shares)) +
+  geom_boxplot (fill='#69b3a2') +
+  xlab("rate_positive_words")
+graph_5
+```
+  
+Based on the boxplot above, it looks like there are more shares when rate of positive words around 0.6 to 0.8.
+
+Lastly, I also would like to see if weekday can affect the number of shares. Most people believe Monday is the busiest day during the week, when there might be more to catch up than other days of the week. Is it true that people share less articles during Monday? Now let's summarize the shares based on weekday (the day that article is published during the week) so that we can visualize that.
+
+```{r summary_6}
+a<-channel_df %>% filter(weekday_is_monday==1) %>% summarise(sum_shares=sum(shares))
+b<-channel_df %>% filter(weekday_is_tuesday==1) %>% summarise(sum_shares=sum(shares))
+c<-channel_df %>% filter(weekday_is_wednesday==1) %>% summarise(sum_shares=sum(shares))
+d<-channel_df %>% filter(weekday_is_thursday==1) %>% summarise(sum_shares=sum(shares))
+e<-channel_df %>% filter(weekday_is_friday==1) %>% summarise(sum_shares=sum(shares))
+f<-channel_df %>% filter(weekday_is_saturday==1) %>% summarise(sum_shares=sum(shares))
+g<-channel_df %>% filter(weekday_is_sunday==1) %>% summarise(sum_shares=sum(shares))
+sum_shares_weekday<-data.frame(a,b,c,d,e,f,g)
+names(sum_shares_weekday)<-c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+sum_shares_weekday
+```
+
+It's surprisingly that Saturday is the date that has the lowest shares during the week. A reason might be people will have more activities to do during weekend.
 
 # **Modeling**
 In order to do some modeling, first we will need to split the data into a training
