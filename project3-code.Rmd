@@ -12,14 +12,15 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(caret)
+library(leaps)
 library(rmarkdown)
 ```
 
 # **Introduction**
 
-In this project, we will analyze the data set about article shares based on various predictors. This data set includes fifty-eight predictors (both continuous and categorical variables) and one continuous response variable (shares). We will provide summary statistics and graphs for selected predictors in the summarizations part. Those are predictors that we think might have more effect on the number of shares, such as length of article tile, numbers of videos/images, the day that article publisehd, etc. In the following section, we will work on building different models and model selection. The models we would like to fit are linear regression model, random forest model and boosted tree model. Cross-validation will be used for both random forest and boosted tree models. 
+In this project, we will analyze the data set about article shares based on various predictors. This data set includes fifty-eight predictors (both continuous and categorical variables) and one continuous response variable (shares). We will provide summary statistics and graphs for selected predictors in the summarizations part. Those are predictors that we think might have more effect on the number of shares, such as length of article tile, numbers of videos/images, the day that article published, etc. In the following section, we will work on building different models and model selection. The models we would like to fit are linear regression model, random forest model and boosted tree model. Cross-validation will be used for both random forest and boosted tree models. 
 
-# **Data**
+# **Data Import**
 
 The first step we need to take is reading in the data. Then we will need to 
 subset to our channel of interest. In this case, that channel is `params$channel`.
@@ -108,30 +109,26 @@ g <- ggplot(channel_df, aes(x = num_videos, y = shares))
 g + geom_point() + xlab("Video Count") + ggtitle("Shares vs Video Count")
 ```
 
-Sometimes, contents with more images are more attractive since visuals give us a better understanding. Now we will investigate how number of imagines affect the shares. First of all, we will take look at some data summaries.
+Sometimes, contents with more images are more attractive since visuals give us a better understanding. Now we will investigate how number of imagines affect the shares. First of all, we will take look at some data summaries. The mean and median of images will give us a general information about how likely the articles contain images. 
 
 ```{r summary_4}
 summary(channel_df$num_imgs)
 ```
 
-It looks like most articles do not have many images since the median value is only 1. The mean value is close to 5, there might be a few articles with a large amount of pictures.
-
-Now we would like to plot the number of shares as the image count changes by a scatter plot.
+Now we would like to do a scatter plot of the number of shares verus the count of images. If the trend shows more images associate with high shares, then count of images may have positive effect on shares. Otherwise, if the trend of shares goes down as image increases, it may indicate a negative effect.
 
 ```{r graph_4}
 g<- ggplot(channel_df, aes(x = num_imgs, y = shares))
   g + geom_point() + xlab("Image Count") + ggtitle("Shares vs Image Count")
 ```
 
-As you can tell, the amount of shares are not necessarily relateing to the number of images. There are even some high shares when image count close to 0.
-
-Now I would like to see if rate of positive words can affect number of shares. First of all, let's looked at some summary statistics.
+Now I would like to see if rate of positive words can affect number of shares. First of all, let's looked at some summary statistics, where we can get an idea how likely the articles show positive words.
 
 ```{r summary_5}
 summary(channel_df$rate_positive_words)
 ```
 
-It looks like most articles have rate of positive words more than 50% for this channel. Let's look into this more and make a plot between shares and rate of positive words. In order to see it more clear, I will cut the predictor in 0.1 length bins by 'cut_width' function. Then I will use the newly created variable as X axis and build a boxplot.
+Now let's look into this more and make a plot between shares and rate of positive words. In order to see it more clear, I will cut the predictor in 0.1 length bins by 'cut_width' function. Then I will use the newly created variable as X axis and build a boxplot.By doing this way, we can exam the trend of shares for each interval of the rate.
 
 ```{r graph_5}
 graph_5<- channel_df %>% mutate (bin=cut_width(rate_positive_words,width=0.1, boundary=0)) %>%
@@ -140,10 +137,8 @@ ggplot(aes(x = bin, y = shares)) +
   xlab("rate_positive_words")
 graph_5
 ```
-  
-Based on the boxplot above, it looks like there are more shares when rate of positive words around 0.6 to 0.8.
 
-Lastly, I also would like to see if weekday can affect the number of shares. Most people believe Monday is the busiest day during the week, when there might be more to catch up than other days of the week. Is it true that people share less articles during Monday? Now let's summarize the shares based on weekday (the day that article is published during the week) so that we can visualize that.
+Lastly, I also would like to see if weekday can affect the number of shares. Most people believe Monday is the busiest day during the week, when there will be more to catch up for work and school than other days. Is it true that people share less articles during Monday? Now let's summarize the shares based on predictor weekday so that we can visualize that. I
 
 ```{r summary_6}
 a<-channel_df %>% filter(weekday_is_monday==1) %>% summarise(sum_shares=sum(shares))
@@ -157,8 +152,6 @@ sum_shares_weekday<-data.frame(a,b,c,d,e,f,g)
 names(sum_shares_weekday)<-c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 sum_shares_weekday
 ```
-
-It's surprisingly that Saturday is the date that has the lowest shares during the week. A reason might be people will have more activities to do during weekend.
 
 # **Modeling**
 In order to do some modeling, first we will need to split the data into a training
@@ -201,9 +194,14 @@ fit_lasso <- train(shares ~., data = train_reduced, method = "lasso",
 
 ```
 
+For the second linear regression model, I will use Principal Component Analysis (PCA) to select the predictors before fitting linear regression model. In the process of fitting the first linear regression, we found the data set has significant multicollinearity problem. PCA is commonly used to reduced the dimension of data by decomposing data into a number of independent factors. In the following section, I will combine PCA process and linear regression fit to one step.
 
+```{r linear_model_2}
+fit_lm_pca<- train(shares ~., data=train[,-1], method = "lm", preProcess = c("center", "scale", "pca"))
+```
 
 ## Random Forest Model
+
 In this section, we will fit a random forest model. Random forest models are an ensemble
 model, using regression trees and a subset of predictors for each tree. They are an
 extension of bagging models, where the algorithm resamples from the data, trains
@@ -219,5 +217,15 @@ fit_rf <- train(shares ~., data = train, method = "rf", trControl =
                    c("center", "scale"))
 ```
 
+## Boosted tree model
+
+In this section, we will fit a boosted tree model. Boosted tree model is a combination of decision tree algorithms and boosting methods. Like Random Forest model we fit above, Boosted tree also repeatedly fit many decision trees to improve the accuracy of the model. However, Boosted tree uses boosting method in which the data selected is weighted in subsequent trees. In the procedure for regression tree, we will initialize predictions as 0 and find the residuals. Then fit a tree with d splits treating the residuals as the response. Following the same step, we update the predictions and residuals (for new prediction) for many times. There are three parameter we need to set in order to use this method: shrinkage parameter, number of splits and number of trees.
+
+```{r boosted_tree}
+fit_bt<- train(shares ~., data = train[,-1], method = "gbm",
+               trControl = trainControl(method = "cv", number = 10),
+               verbose = FALSE)
+```
 
 # **Comparison**
+
