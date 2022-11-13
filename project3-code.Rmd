@@ -2,18 +2,39 @@
 title: "Project3"
 author: "Yuzhi Li and Annie Brinza"
 date: "2022-11-10"
-output: html_document
-params:
-  channel: "data_channel_is_lifestyle"
+output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r GlobalOptions}
+options(knitr.duplicate.label = 'allow')
+```
+
+```{r include = FALSE, eval = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(caret)
 library(leaps)
 library(rmarkdown)
+
+# In this section we will automate the code to create a file per channel
+# First need to pull all the different channel options
+df <- read_csv("data/OnlineNewsPopularity.csv", show_col_types = FALSE)
+cols_list <- colnames(df)
+channels <- cols_list[startsWith(cols_list, "data_channel_is")]
+#create filenames
+output_file <- paste0(channels, ".html")
+#create a list for each channel
+params <- lapply(channels, FUN = function(x){list(channel = x)})
+
+#put into a data frame 
+reports <- tibble(output_file, params)
+
+# Now need to knit
+apply(reports, MARGIN = 1, 
+            FUN = function(x){
+                render(input = "project3-code.Rmd", output_file = x[[1]], params = x[[2]])
+                })
 ```
 
 # **Introduction**
@@ -27,8 +48,9 @@ subset to our channel of interest. In this case, that channel is `params$channel
 
 ```{r read_data}
 df <- read_csv("data/OnlineNewsPopularity.csv", show_col_types = FALSE)
+print(params$channel)
 channel_df <- df %>% 
-  filter(data_channel_is_lifestyle == 1) %>% 
+  filter(!!as.symbol(params$channel) == 1) %>% 
   select(-starts_with("data_channel_is"))
 ```
 
