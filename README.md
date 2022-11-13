@@ -8,11 +8,14 @@ different reports for each channel of data. The data in this case is from an onl
 
 ## R Packages Used
 The below packages were used in this work:
-    * library(tidyverse)
-    * library(ggplot2)
-    * library(caret)
-    * library(leaps)
-    * library(rmarkdown)
+
+```
+library(tidyverse)
+library(ggplot2)
+library(caret)
+library(leaps)
+library(rmarkdown)
+```
     
 ## Links to the Generated Analyses
 
