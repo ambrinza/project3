@@ -160,7 +160,7 @@ the articles.
 ```{r split_data}
 # Setting seed for reproducibility
 set.seed(24)
-channel_df <- channel_df %>% select(-url)
+channel_df <- channel_df %>% select(-url, -timedelta)
 train_index <- createDataPartition(channel_df$shares, p = 0.70, list = FALSE, times = 1)
 train <- channel_df[train_index, ]
 test <- channel_df[-train_index, ]
@@ -197,7 +197,7 @@ fit_lasso <- train(shares ~., data = train_reduced, method = "lasso",
 For the second linear regression model, I will use Principal Component Analysis (PCA) to select the predictors before fitting linear regression model. In the process of fitting the first linear regression, we found the data set has significant multicollinearity problem. PCA is commonly used to reduced the dimension of data by decomposing data into a number of independent factors. In the following section, I will combine PCA process and linear regression fit to one step.
 
 ```{r linear_model_2}
-fit_lm_pca<- train(shares ~., data=train[,-1], method = "lm", preProcess = c("center", "scale", "pca"))
+fit_lm_pca<- train(shares ~., data=train, method = "lm", preProcess = c("center", "scale", "pca"))
 ```
 
 ## Random Forest Model
@@ -222,7 +222,7 @@ fit_rf <- train(shares ~., data = train, method = "rf", trControl =
 In this section, we will fit a boosted tree model. Boosted tree model is a combination of decision tree algorithms and boosting methods. Like Random Forest model we fit above, Boosted tree also repeatedly fit many decision trees to improve the accuracy of the model. However, Boosted tree uses boosting method in which the data selected is weighted in subsequent trees. In the procedure for regression tree, we will initialize predictions as 0 and find the residuals. Then fit a tree with d splits treating the residuals as the response. Following the same step, we update the predictions and residuals (for new prediction) for many times. There are three parameter we need to set in order to use this method: shrinkage parameter, number of splits and number of trees.
 
 ```{r boosted_tree}
-fit_bt<- train(shares ~., data = train[,-1], method = "gbm",
+fit_bt<- train(shares ~., data = train, method = "gbm",
                trControl = trainControl(method = "cv", number = 10),
                verbose = FALSE)
 ```
