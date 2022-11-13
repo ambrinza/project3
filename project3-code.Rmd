@@ -175,6 +175,8 @@ predicted value. Linear regression can include interaction terms that represent
 the interaction between two variables, as well as higher order terms such as
 a variable squared.
 
+### First Linear Regression Model
+
 The first linear regression model we will train is a lasso linear regression model.
 We have many predictors in this case, so lasso is helpful since it performs variable
 selection.
@@ -194,7 +196,9 @@ fit_lasso <- train(shares ~., data = train_reduced, method = "lasso",
 
 ```
 
-For the second linear regression model, I will use Principal Component Analysis (PCA) to select the predictors before fitting linear regression model. In the process of fitting the first linear regression, we found the data set has significant multicollinearity problem. PCA is commonly used to reduced the dimension of data by decomposing data into a number of independent factors. In the following section, I will combine PCA process and linear regression fit to one step.
+### Second Linear Regression Model
+
+For the second linear regression model, I will use Principal Component Analysis (PCA) to select the predictors before fitting linear regression model. In the process of fitting the first linear regression, we found that the data set has significant multicollinearity problem. PCA is commonly used to reduced the dimension of data by decomposing data into a number of independent factors. In the following section, I will combine PCA process and linear regression fit to one step.
 
 ```{r linear_model_2}
 fit_lm_pca<- train(shares ~., data=train, method = "lm", preProcess = c("center", "scale", "pca"))
@@ -217,7 +221,7 @@ fit_rf <- train(shares ~., data = train, method = "rf", trControl =
                    c("center", "scale"))
 ```
 
-## Boosted tree model
+## Boosted Tree Model
 
 In this section, we will fit a boosted tree model. Boosted tree model is a combination of decision tree algorithms and boosting methods. Like Random Forest model we fit above, Boosted tree also repeatedly fit many decision trees to improve the accuracy of the model. However, Boosted tree uses boosting method in which the data selected is weighted in subsequent trees. In the procedure for regression tree, we will initialize predictions as 0 and find the residuals. Then fit a tree with d splits treating the residuals as the response. Following the same step, we update the predictions and residuals (for new prediction) for many times. There are three parameter we need to set in order to use this method: shrinkage parameter, number of splits and number of trees.
 
@@ -229,3 +233,32 @@ fit_bt<- train(shares ~., data = train, method = "gbm",
 
 # **Comparison**
 
+In this section, we will use the test data set to fit all candidate models we got from last section. We will calculate the test Mean Squared Error (MSE), $$R^2$$ for each model. The model with the smallest MSE will be the best fit model.
+
+## Exam model fit on First Linear Regression Model
+
+```{r fit_first_regression}
+pred1<- predict(fit_lasso, newdata=test)
+postResample(pred1, obs = test$shares)
+```
+
+## Exam model fit on Second Linear Regression Model
+
+```{r fit_second_regression}
+pred2<- predict(fit_lm_pca, newdata=test)
+postResample(pred2, obs = test$shares)
+```
+
+## Exam model fit on Random Tree Model
+
+```{r fit_random_forest}
+pred3<- predict(fit_rf, newdata=test)
+postResample(pred3, obs = test$shares)
+```
+
+## Exam model fit on Boosted Tree Model
+
+```{r fit_boosted_tree}
+pred4<- predict(fit_bt, newdata=test)
+postResample(pred4, obs = test$shares)
+```
