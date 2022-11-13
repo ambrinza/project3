@@ -3,6 +3,8 @@ title: "Project3"
 author: "Yuzhi Li and Annie Brinza"
 date: "2022-11-10"
 output: github_document
+params:
+  channel: "data_channel_is_lifestyle"
 ---
 
 ```{r GlobalOptions}
