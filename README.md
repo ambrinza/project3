@@ -27,7 +27,7 @@ The analysis for [Entertainment articles is available here](../tree/data_channel
 
 
 ## Code Used to Create Analyses
-```{r setup, eval = FALSE}
+```
 # In this section we will automate the code to create a file per channel
 # First need to pull all the different channel options
 df <- read_csv("data/OnlineNewsPopularity.csv", show_col_types = FALSE)
@@ -46,5 +46,4 @@ apply(reports, MARGIN = 1,
             FUN = function(x){
                 render(input = "project3-code.Rmd", output_file = x[[1]], params = x[[2]])
                 })
-
 ```
