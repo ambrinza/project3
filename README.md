@@ -19,7 +19,7 @@ library(rmarkdown)
     
 ## Links to the Generated Analyses
 The analysis for [Lifestyle articles is available here](../tree/data_channel_is_lifestyle.html).  
-The analysis for [Business articles is available here](../tree/data_channel_is_bus.html).
+The analysis for [Business articles is available here](../tree/data_channel_is_bus.html).  
 The analysis for [Social Media articles is available here](../tree/data_channel_is_socmed.html).  
 The analysis for [Technology articles is available here](../tree/data_channel_is_tech.html).  
 The analysis for [World articles is available here](../tree/data_channel_is_world.html).  
