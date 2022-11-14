@@ -27,11 +27,10 @@ In this project, we will analyze the data set about article shares based on vari
 # **Data Import**
 
 The first step we need to take is reading in the data. Then we will need to 
-subset to our channel of interest. In this case, that channel is `params$channel`.
+subset to our channel of interest. In this case, that channel is `r params$channel`.
 
 ```{r read_data}
 df <- read_csv("data/OnlineNewsPopularity.csv", show_col_types = FALSE)
-print(params$channel)
 channel_df <- df %>% 
   filter(!!as.symbol(params$channel) == 1) %>% 
   select(-starts_with("data_channel_is"))
@@ -240,7 +239,7 @@ fit_bt<- train(shares ~., data = train, method = "gbm",
 
 # **Comparison**
 
-In this section, we will use the test data set to fit all candidate models we got from the above section. We will calculate the test Root Mean Squared Error (RMSE), $$R^2$$ and Mean Absolute Error (MAE) for each model. A model with good prediction will have small RMSE and MAE. $$R^$$ also indicate how well the regression model fit. Ideally we would like to see $$R^2$$ value close to 1. In this canse, we will choose the model with smallest RMSE be the best fit model.
+In this section, we will use the test data set to fit all candidate models we got from the above section. We will calculate the test Root Mean Squared Error (RMSE), $R^2$ and Mean Absolute Error (MAE) for each model. A model with good prediction will have small RMSE and MAE. $R^2$ also indicate how well the regression model fit. Ideally we would like to see $R^2$ value close to 1 for the two regression models. In this case, we will choose the model with smallest RMSE be the best fit model.
 
 ## Exam model fit on First Linear Regression Model
 
