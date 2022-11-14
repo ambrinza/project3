@@ -176,6 +176,7 @@ sum_shares_weekday
 ```
 
 # **Modeling**
+
 In order to do some modeling, first we will need to split the data into a training
 and test set. First, we will remove URLs since they are just essentially IDs for
 the articles.
@@ -189,6 +190,7 @@ test <- channel_df[-train_index, ]
 ```
 
 ## Linear Regression Models
+
 In this section, we will fit two linear regression models. The idea behind linear
 regression is to essentially estimate an output using available features, fitting
 the observations in a linear manner. The model is fit by minimizing the sum of squared
@@ -255,32 +257,52 @@ fit_bt<- train(shares ~., data = train, method = "gbm",
 
 # **Comparison**
 
-In this section, we will use the test data set to fit all candidate models we got from last section. We will calculate the test Mean Squared Error (MSE), $$R^2$$ for each model. The model with the smallest MSE will be the best fit model.
+In this section, we will use the test data set to fit all candidate models we got from the above section. We will calculate the test Root Mean Squared Error (RMSE), $$R^2$$ and Mean Absolute Error (MAE) for each model. A model with good prediction will have small RMSE and MAE. $$R^$$ also indicate how well the regression model fit. Ideally we would like to see $$R^2$$ value close to 1. In this canse, we will choose the model with smallest RMSE be the best fit model.
 
 ## Exam model fit on First Linear Regression Model
 
 ```{r fit_first_regression}
 pred1<- predict(fit_lasso, newdata=test)
-postResample(pred1, obs = test$shares)
+fit_result1<- postResample(pred1, obs = test$shares)
+fit_result1
 ```
 
 ## Exam model fit on Second Linear Regression Model
 
 ```{r fit_second_regression}
 pred2<- predict(fit_lm_pca, newdata=test)
-postResample(pred2, obs = test$shares)
+fit_result2<- postResample(pred2, obs = test$shares)
+fit_result2
 ```
 
 ## Exam model fit on Random Tree Model
 
 ```{r fit_random_forest}
 pred3<- predict(fit_rf, newdata=test)
-postResample(pred3, obs = test$shares)
+fit_result3<- postResample(pred3, obs = test$shares)
+fit_result3
 ```
 
 ## Exam model fit on Boosted Tree Model
 
 ```{r fit_boosted_tree}
 pred4<- predict(fit_bt, newdata=test)
-postResample(pred4, obs = test$shares)
+fit_result4<- postResample(pred4, obs = test$shares)
+fit_result4
 ```
+
+## Choose the best fit model
+
+I will arrange the model by RMSE value. The result will show the model name with the smallest RMSE.
+
+```{r best_fit_model}
+Model<- c("first_linear_regression", "second_linear_regression", "random_forest", "boosted_tree")
+RMSE<- c(fit_result1[1], fit_result2[1], fit_result3[1], fit_result4[1])
+result<- data.frame(Model, RMSE)
+Best_model<- (result %>% arrange(desc(RMSE)))[4,1]
+Best_model
+```
+
+
+
+
